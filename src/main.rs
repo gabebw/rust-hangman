@@ -2,45 +2,82 @@ use std::io::{self, BufRead};
 use std::process;
 
 fn ask() -> String {
+    println!("Your guess (one letter please)?");
     let stdin = io::stdin();
     let result = stdin.lock().lines().next().unwrap().unwrap().trim_end().to_string();
     result
 }
 
-fn main() {
-    let secret = "HELLO WORLD";
+struct Game<'a> {
+    secret: &'a str,
+    guessed: Vec<String>,
+    num_bad_guesses: usize,
+    num_guesses: usize,
+}
 
-    let mut guessed: Vec<String> = Vec::new();
-    let mut num_bad_guesses = 0;
-    let mut num_guesses = 0;
-    // head, 2 arms, 2 legs, body = 6 bad guesses allowed, and 7th ends the game
-    while num_bad_guesses < 7 {
+impl<'a> Game<'a> {
+    fn build(secret: &str) -> Game {
+        Game {
+            secret,
+            guessed: Vec::new(),
+            num_bad_guesses: 0,
+            num_guesses: 0
+        }
+    }
+
+    fn display_status(&self) -> () {
+        println!("Total guesses: {} / Bad guesses: {}", self.num_guesses, self.num_bad_guesses);
+        println!("Number of bad guesses: {}", self.num_bad_guesses);
+    }
+
+    fn display_phrase(&self) -> () {
         print!("Phrase: ");
-        for c in secret.chars() {
-            if guessed.contains(&c.to_string()) || c.is_whitespace() {
+        for c in self.secret.chars() {
+            if self.guessed.contains(&c.to_string()) || c.is_whitespace() {
                 print!("{}", c);
             } else {
                 print!("_");
             }
         }
         println!("");
-        println!("Total guesses: {} / Bad guesses: {}", num_guesses, num_bad_guesses);
-        println!("Your guess (one letter please)?");
-        println!("Number of bad guesses: {}", num_bad_guesses);
-        let guess = ask();
-        if let Some(_) = secret.find(&guess) {
-            println!("Yep, that's in there");
-            guessed.push(guess.to_string());
+    }
 
-            if secret.chars().all(|c| c.is_whitespace() || guessed.contains(&c.to_string())) {
+    fn guess(&mut self, guess: &str) -> bool {
+        self.guessed.push(guess.to_string());
+        self.num_guesses += 1;
+        if let Some(_) = self.secret.find(&guess) {
+            true
+        } else {
+            self.num_bad_guesses += 1;
+            false
+        }
+    }
+
+    fn is_won(&self) -> bool {
+        self.secret.chars().all(|c|
+            c.is_whitespace() || self.guessed.contains(&c.to_string())
+        )
+    }
+}
+
+fn main() {
+    let secret = "HELLO WORLD";
+    let mut game = Game::build(secret);
+    // head, 2 arms, 2 legs, body = 6 bad guesses allowed, and 7th ends the game
+    while game.num_bad_guesses < 7 {
+        game.display_status();
+        game.display_phrase();
+        let guess = ask();
+
+        if game.guess(&guess) {
+            println!("Yep, that's in there");
+            if game.is_won() {
                 println!("You win!");
                 process::exit(0);
             }
         } else {
             println!("Nope, not in there");
-            num_bad_guesses += 1;
         }
-        num_guesses += 1;
     }
     println!("You lose :(");
 }
