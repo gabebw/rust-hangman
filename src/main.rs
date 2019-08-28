@@ -81,3 +81,40 @@ fn main() {
     }
     println!("You lose :(");
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_bad_guess() {
+        let mut game = Game::build("hello");
+        game.guess("F");
+        assert_eq!(1, game.num_guesses);
+        assert_eq!(1, game.num_bad_guesses);
+    }
+
+    #[test]
+    fn test_good_guess() {
+        let mut game = Game::build("hello");
+        game.guess("h");
+        assert_eq!(1, game.num_guesses);
+        assert_eq!(0, game.num_bad_guesses);
+    }
+
+    #[test]
+    fn test_winning() {
+        let mut game = Game::build("hi");
+        game.guess("h");
+        game.guess("i");
+        assert_eq!(true, game.is_won());
+    }
+
+    #[test]
+    fn test_winning_with_whitespace() {
+        let mut game = Game::build("h i");
+        game.guess("h");
+        game.guess("i");
+        assert_eq!(true, game.is_won());
+    }
+}
