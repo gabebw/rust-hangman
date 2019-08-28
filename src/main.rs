@@ -8,6 +8,14 @@ fn ask() -> String {
     result
 }
 
+#[derive(Debug, PartialEq)]
+enum GuessResult {
+    CorrectGuess,
+    RepeatedCorrectGuess,
+    WrongGuess,
+    RepeatedWrongGuess,
+}
+
 struct Game<'a> {
     secret: &'a str,
     guessed: Vec<String>,
@@ -42,14 +50,26 @@ impl<'a> Game<'a> {
         println!("");
     }
 
-    fn guess(&mut self, guess: &str) -> bool {
-        self.guessed.push(guess.to_string());
-        self.num_guesses += 1;
-        if let Some(_) = self.secret.find(&guess) {
-            true
+    fn guess(&mut self, guess: &str) -> GuessResult {
+        let matches_secret = self.secret.find(&guess).is_some();
+        let already_guessed = self.guessed.contains(&guess.to_string());
+        if matches_secret {
+            if already_guessed {
+                GuessResult::RepeatedCorrectGuess
+            } else {
+                self.guessed.push(guess.to_string());
+                self.num_guesses += 1;
+                GuessResult::CorrectGuess
+            }
         } else {
-            self.num_bad_guesses += 1;
-            false
+            if already_guessed {
+                GuessResult::RepeatedWrongGuess
+            } else {
+                self.guessed.push(guess.to_string());
+                self.num_guesses += 1;
+                self.num_bad_guesses += 1;
+                GuessResult::WrongGuess
+            }
         }
     }
 
@@ -69,14 +89,17 @@ fn main() {
         game.display_phrase();
         let guess = ask();
 
-        if game.guess(&guess) {
-            println!("Yep, that's in there");
-            if game.is_won() {
-                println!("You win!");
-                process::exit(0);
+        match game.guess(&guess) {
+            GuessResult::CorrectGuess | GuessResult::RepeatedCorrectGuess => {
+                println!("Yep, that's in there");
+                if game.is_won() {
+                    println!("You win!");
+                    process::exit(0);
+                }
+            },
+            GuessResult::WrongGuess | GuessResult::RepeatedWrongGuess => {
+                println!("Nope, not in there");
             }
-        } else {
-            println!("Nope, not in there");
         }
     }
     println!("You lose :(");
@@ -90,7 +113,17 @@ mod test {
     fn test_bad_guess() {
         let mut game = Game::build("hello");
         let result = game.guess("F");
-        assert_eq!(false, result);
+        assert_eq!(GuessResult::WrongGuess, result);
+        assert_eq!(1, game.num_guesses);
+        assert_eq!(1, game.num_bad_guesses);
+    }
+
+    #[test]
+    fn test_repeated_bad_guess() {
+        let mut game = Game::build("hello");
+        game.guess("F");
+        let result = game.guess("F");
+        assert_eq!(GuessResult::RepeatedWrongGuess, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(1, game.num_bad_guesses);
     }
@@ -99,7 +132,17 @@ mod test {
     fn test_good_guess() {
         let mut game = Game::build("hello");
         let result = game.guess("h");
-        assert_eq!(true, result);
+        assert_eq!(GuessResult::CorrectGuess, result);
+        assert_eq!(1, game.num_guesses);
+        assert_eq!(0, game.num_bad_guesses);
+    }
+
+    #[test]
+    fn test_repeated_good_guess() {
+        let mut game = Game::build("hello");
+        game.guess("h");
+        let result = game.guess("h");
+        assert_eq!(GuessResult::RepeatedCorrectGuess, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(0, game.num_bad_guesses);
     }
