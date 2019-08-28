@@ -19,14 +19,14 @@ fn main() {
         let guess = ask();
 
         match game.guess(&guess) {
-            game::GuessResult::CorrectGuess | game::GuessResult::RepeatedCorrectGuess => {
+            game::GuessResult::CorrectGuess => {
                 println!("Yep, that's in there");
                 if game.is_won() {
                     println!("You win!");
                     process::exit(0);
                 }
             },
-            game::GuessResult::WrongGuess | game::GuessResult::RepeatedWrongGuess => {
+            game::GuessResult::WrongGuess => {
                 println!("Nope, not in there");
             }
         }
@@ -52,7 +52,7 @@ mod test {
         let mut game = game::Game::build("hello");
         game.guess("F");
         let result = game.guess("F");
-        assert_eq!(game::GuessResult::RepeatedWrongGuess, result);
+        assert_eq!(game::GuessResult::WrongGuess, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(1, game.num_bad_guesses);
     }
@@ -71,7 +71,7 @@ mod test {
         let mut game = game::Game::build("hello");
         game.guess("h");
         let result = game.guess("h");
-        assert_eq!(game::GuessResult::RepeatedCorrectGuess, result);
+        assert_eq!(game::GuessResult::CorrectGuess, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(0, game.num_bad_guesses);
     }

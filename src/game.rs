@@ -1,9 +1,7 @@
 #[derive(Debug, PartialEq)]
 pub enum GuessResult {
     CorrectGuess,
-    RepeatedCorrectGuess,
     WrongGuess,
-    RepeatedWrongGuess,
 }
 
 pub struct Game<'a> {
@@ -45,7 +43,7 @@ impl<'a> Game<'a> {
         let already_guessed = self.guessed.contains(&guess.to_string());
         if matches_secret {
             if already_guessed {
-                GuessResult::RepeatedCorrectGuess
+                GuessResult::CorrectGuess
             } else {
                 self.guessed.push(guess.to_string());
                 self.num_guesses += 1;
@@ -53,7 +51,7 @@ impl<'a> Game<'a> {
             }
         } else {
             if already_guessed {
-                GuessResult::RepeatedWrongGuess
+                GuessResult::WrongGuess
             } else {
                 self.guessed.push(guess.to_string());
                 self.num_guesses += 1;
