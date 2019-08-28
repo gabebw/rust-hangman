@@ -89,7 +89,8 @@ mod test {
     #[test]
     fn test_bad_guess() {
         let mut game = Game::build("hello");
-        game.guess("F");
+        let result = game.guess("F");
+        assert_eq!(false, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(1, game.num_bad_guesses);
     }
@@ -97,7 +98,8 @@ mod test {
     #[test]
     fn test_good_guess() {
         let mut game = Game::build("hello");
-        game.guess("h");
+        let result = game.guess("h");
+        assert_eq!(true, result);
         assert_eq!(1, game.num_guesses);
         assert_eq!(0, game.num_bad_guesses);
     }
