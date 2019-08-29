@@ -10,6 +10,8 @@ fn ask() -> String {
 }
 
 fn main() {
+    let thumbs_up = "\u{1F44D}";
+    let red_x = "\u{274C}";
     let secret = "HELLO WORLD";
     let mut game = game::Game::build(secret);
     // head, 2 arms, 2 legs, body = 6 bad guesses allowed, and 7th ends the game
@@ -20,14 +22,16 @@ fn main() {
 
         match game.guess(&guess) {
             game::GuessResult::CorrectGuess => {
-                println!("Yep, that's in there");
+                println!("{} Correct guess", thumbs_up);
                 if game.is_won() {
                     println!("You win!");
                     process::exit(0);
                 }
             },
             game::GuessResult::WrongGuess => {
-                println!("Nope, not in there");
+                // There's an extra space after the emoji because my terminal (Alacritty) doesn't
+                // display any space between the emoji and text if there's only one.
+                println!("{}  Nope, try again", red_x);
             }
         }
     }
